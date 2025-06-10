@@ -1,59 +1,53 @@
-name: Push Submodule to External Repo
+name: Push Docs to External Repo
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # 触发分支
     paths:
-      - './gef-doc/**'  # 监听子模块路径变化
-      - '.gitmodules'           # 监听子模块配置变化
+      - 'gef-doc/src/main/resource/**'  # 仅当资源目录变更时触发
 
 jobs:
-  push-submodule:
+  push-docs:
     runs-on: ubuntu-latest
     steps:
-      # 步骤1: 递归检出仓库和子模块
-      - name: Checkout repository with submodules
+      - name: Checkout Source Repo
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive  # 确保子模块被检出
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 获取完整历史
 
-      # 步骤2: 设置目标仓库访问权限
-      - name: Configure target repository access
+      - name: Configure Target Repo
+        env:
+          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git"
         run: |
           git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@users.noreply.github.com"
-          cd path/to/submodule  # 进入子模块目录
+          git config --global user.email "actions@github.com"
 
-      # 步骤3: 添加目标仓库为远程
-      - name: Add target remote
-        working-directory: ./gef-doc
+      - name: Prepare Target Content
         run: |
-          git remote add target https://${{ secrets.TARGET_TOKEN }}@github.com/yangfeng-kccs/gef-docs.git
-          git fetch target
+          # 创建临时目录并复制资源文件
+          mkdir -p target_content
+          cp -R gef-framework/gef-doc/src/main/resource/* target_content/
 
-      # 步骤4: 准备推送内容
-      - name: Prepare content for push
-        working-directory: ./gef-doc
-        run: |
-          # 获取当前子模块的提交哈希
-          SUBMODULE_SHA=$(git rev-parse HEAD)
-          
-          # 创建新分支（避免污染目标仓库历史）
-          git checkout -b actions-push $SUBMODULE_SHA
-          
-          # 可选择：清理不需要的文件
-          # git rm -rf --cached .github .gitignore
-
-      # 步骤5: 推送到目标仓库
-      - name: Push to target repository
-        working-directory: ./gef-doc
-        run: |
-          git push target actions-push:main --force  # 推送到目标main分支
-          # 或者推送到特定分支：git push target actions-push:gh-pages --force
-
-      # 可选步骤：清理
-      - name: Cleanup
-        run: |
-          #rm -rf path/to/submodule
+      - name: Push to Target Repository
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs').promises;
+            const { execSync } = require('child_process');
+            
+            // 克隆目标仓库到临时目录
+            execSync('git clone ${{ env.TARGET_REPO }} target_repo', { stdio: 'inherit' });
+            
+            // 清空目标仓库（保留.git目录）
+            await fs.rm('target_repo', { recursive: true, force: true });
+            await fs.mkdir('target_repo');
+            
+            // 复制新内容到目标仓库
+            await fs.cp('target_content', 'target_repo', { recursive: true });
+            
+            // 提交并推送变更
+            process.chdir('target_repo');
+            execSync('git add -A');
+            execSync('git commit -m "Update docs from gef-doc/resource" || echo "No changes"');
+            execSync('git push origin main');
