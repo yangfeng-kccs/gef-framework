@@ -1,0 +1,59 @@
+name: Push Submodule to External Repo
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'gef-doc/**'  # 监听子模块路径变化
+      - '.gitmodules'           # 监听子模块配置变化
+
+jobs:
+  push-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤1: 递归检出仓库和子模块
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 获取完整历史
+
+      # 步骤2: 设置目标仓库访问权限
+      - name: Configure target repository access
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@users.noreply.github.com"
+          cd path/to/submodule  # 进入子模块目录
+
+      # 步骤3: 添加目标仓库为远程
+      - name: Add target remote
+        working-directory: ./gef-doc
+        run: |
+          git remote add target https://${{ secrets.TARGET_TOKEN }}@github.com/yangfeng-kccs/gef-docs.git
+          git fetch target
+
+      # 步骤4: 准备推送内容
+      - name: Prepare content for push
+        working-directory: ./gef-doc
+        run: |
+          # 获取当前子模块的提交哈希
+          SUBMODULE_SHA=$(git rev-parse HEAD)
+          
+          # 创建新分支（避免污染目标仓库历史）
+          git checkout -b actions-push $SUBMODULE_SHA
+          
+          # 可选择：清理不需要的文件
+          # git rm -rf --cached .github .gitignore
+
+      # 步骤5: 推送到目标仓库
+      - name: Push to target repository
+        working-directory: ./gef-doc
+        run: |
+          git push target actions-push:main --force  # 推送到目标main分支
+          # 或者推送到特定分支：git push target actions-push:gh-pages --force
+
+      # 可选步骤：清理
+      - name: Cleanup
+        run: |
+          #rm -rf path/to/submodule
