@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]  # 触发分支
     paths:
-      - 'gef-doc/src/main/resource/**'  # 仅当资源目录变更时触发
+      - 'gef-doc/src/main/resources/**'  # 仅当资源目录变更时触发
 
 jobs:
   push-docs:
@@ -27,7 +27,7 @@ jobs:
         run: |
           # 创建临时目录并复制资源文件
           mkdir -p target_content
-          cp -R gef-framework/gef-doc/src/main/resource/* target_content/
+          cp -R gef-framework/gef-doc/src/main/resources/* target_content/
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
@@ -49,5 +49,5 @@ jobs:
             // 提交并推送变更
             process.chdir('target_repo');
             execSync('git add -A');
-            execSync('git commit -m "Update docs from gef-doc/resource" || echo "No changes"');
+            execSync('git commit -m "Update docs from gef-doc/resources" || echo "No changes"');
             execSync('git push origin main');
