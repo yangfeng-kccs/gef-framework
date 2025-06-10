@@ -1,0 +1,53 @@
+name: Push Docs to External Repo
+
+on:
+  push:
+    branches: [ main ]  # 触发分支
+    paths:
+      - 'gef-doc/src/main/resource/**'  # 仅当资源目录变更时触发
+
+jobs:
+  push-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive  # 确保子模块被检出
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Target Repo
+        env:
+          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git"
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Prepare Target Content
+        run: |
+          # 创建临时目录并复制资源文件
+          mkdir -p target_content
+          cp -R gef-framework/gef-doc/src/main/resource/* target_content/
+
+      - name: Push to Target Repository
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs').promises;
+            const { execSync } = require('child_process');
+            
+            // 克隆目标仓库到临时目录
+            execSync('git clone ${{ env.TARGET_REPO }} target_repo', { stdio: 'inherit' });
+            
+            // 清空目标仓库（保留.git目录）
+            await fs.rm('target_repo', { recursive: true, force: true });
+            await fs.mkdir('target_repo');
+            
+            // 复制新内容到目标仓库
+            await fs.cp('target_content', 'target_repo', { recursive: true });
+            
+            // 提交并推送变更
+            process.chdir('target_repo');
+            execSync('git add -A');
+            execSync('git commit -m "Update docs from gef-doc/resource" || echo "No changes"');
+            execSync('git push origin main');
