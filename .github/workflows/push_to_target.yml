@@ -1,59 +1,71 @@
-name: Push Docs to External Repo
+name: Push  Files
 
 on:
   push:
-    branches: [ main ]  # 触发分支
+    branches: [ main ]
     paths:
-      - 'gef-doc/src/main/resources/**'  # 仅当资源目录变更时触发
+      - 'gef-doc/src/main/resources/**'
 
 jobs:
-  push-docs:
+  push-resources:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Repo
+      - name: Checkout with Submodules
         uses: actions/checkout@v4
         with:
-          submodules: recursive  # 确保子模块被检出
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Target Repo
-        env:
-          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git"
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Prepare Target Content
         run: |
-          # 创建临时目录并复制资源文件
           mkdir -p target_content
           cp -R gef-doc/src/main/resources/* target_content/
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
+        env:
+          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/目标用户名/目标仓库名.git"
         with:
           script: |
             const fs = require('fs').promises;
             const { execSync } = require('child_process');
             
-            // 克隆目标仓库到临时目录
-            execSync('git clone https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git target_repo', { stdio: 'inherit' });
+            // 获取环境变量
+            const targetRepo = process.env.TARGET_REPO;
             
-            cd target_repo
-            mkdir -p 25.9
-            cp -R ../target_content/* .
+            console.log("开始克隆目标仓库...");
+            execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
             
-            cd ..
-            git add .
-            git config user.name "GitHub Actions"
-            git config user.email "actions@github.com"
             
-            # 检查是否有实际变更
-            if git diff-index --quiet HEAD --; then
-              echo "No changes to push"
-            else
-              git commit -m "Update resources from gef-doc (${GITHUB_SHA:0:7})"
-              git push origin main
-            fi
+            mkdir -p target_repo/25.9
+          
+            console.log("清空目标仓库...");
+            execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
             
-      
+            console.log("复制新内容...");
+            await fs.cp('target_content', 'target_repo/25.9', { recursive: true });
+            
+            console.log("切换到目标仓库目录...");
+            process.chdir('target_repo');
+            
+            console.log("当前目录: " + process.cwd());
+            execSync('ls -la', { stdio: 'inherit' });
+            
+            console.log("添加文件...");
+            execSync('git add -A', { stdio: 'inherit' });
+            
+            console.log("检查变更...");
+            const status = execSync('git status --porcelain').toString();
+            if (!status) {
+              console.log("没有变更需要提交");
+              return;
+            }
+            
+            console.log("提交变更...");
+            execSync('git config user.name "GitHub Actions"', { stdio: 'inherit' });
+            execSync('git config user.email "actions@github.com"', { stdio: 'inherit' });
+            execSync(`git commit -m "Update s from ${process.env.GITHUB_SHA}"`, { stdio: 'inherit' });
+            
+            console.log("推送变更...");
+            execSync('git push origin main', { stdio: 'inherit' });
+            console.log("推送完成!");
