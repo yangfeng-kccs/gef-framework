@@ -37,13 +37,13 @@ jobs:
             execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
             
             
-            mkdir -p target_repo/25.9
+            // mkdir -p target_repo/25.9
           
             console.log("清空目标仓库...");
             execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
             
             console.log("复制新内容...");
-            await fs.cp('target_content', 'target_repo/25.9', { recursive: true });
+            await fs.cp('target_content', 'target_repo', { recursive: true });
             
             console.log("切换到目标仓库目录...");
             process.chdir('target_repo');
