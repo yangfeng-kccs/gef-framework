@@ -19,7 +19,8 @@ jobs:
       - name: Prepare Target Content
         run: |
           echo "当前工作目录: $(pwd)"
-          cd ..
+          cd ../
+          echo "当前工作目录: $(pwd)"
           mkdir -p target_content
           cp -R gef-framework/gef-doc/src/main/resources/* target_content/
 
