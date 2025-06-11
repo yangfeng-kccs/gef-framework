@@ -18,6 +18,7 @@ jobs:
 
       - name: Prepare Target Content
         run: |
+          console.log("当前目录: " + process.cwd());
           mkdir -p target_content
           cp -R gef-doc/src/main/resources/* target_content/
 
