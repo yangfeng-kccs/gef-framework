@@ -18,11 +18,11 @@ jobs:
 
       - name: Prepare Target Content
         run: |
-          console.log("当前目录: " + process.cwd());
+          echo "当前工作目录: $(pwd)"
+          echo "完整目录结构:"
+          ls -R
           mkdir -p target_content
           cp -R gef-doc/src/main/resources/* target_content/
-
-          console.log("当前目录: " + process.cwd());
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
