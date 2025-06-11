@@ -37,7 +37,8 @@ jobs:
             const targetRepo = process.env.TARGET_REPO;
 
             console.log("当前目录: " + process.cwd());
-
+            process.chdir("..")
+            console.log("当前目录: " + process.cwd());
             // 确保目录不存在
             try {
               await fs.rm('target_repo', { recursive: true, force: true });
