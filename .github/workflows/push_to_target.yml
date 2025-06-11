@@ -21,6 +21,8 @@ jobs:
           mkdir -p target_content
           cp -R gef-doc/src/main/resources/* target_content/
 
+          console.log("当前目录: " + process.cwd());
+
       - name: Push to Target Repository
         uses: actions/github-script@v6
         env:
@@ -33,6 +35,7 @@ jobs:
             // 获取环境变量
             const targetRepo = process.env.TARGET_REPO;
 
+            console.log("当前目录: " + process.cwd());
 
             // 确保目录不存在
             try {
@@ -54,6 +57,7 @@ jobs:
             console.log("复制新内容...");
             await fs.cp('target_content', 'target_repo', { recursive: true });
             
+            console.log("当前目录: " + process.cwd());
             console.log("切换到目标仓库目录...");
             process.chdir('target_repo');
             
