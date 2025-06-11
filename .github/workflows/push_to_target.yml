@@ -32,6 +32,15 @@ jobs:
             
             // 获取环境变量
             const targetRepo = process.env.TARGET_REPO;
+
+
+            // 确保目录不存在
+            try {
+              await fs.rm('target_repo', { recursive: true, force: true });
+              console.log("已删除旧的目标目录");
+            } catch (err) {
+              console.log("目标目录不存在，无需删除");
+            }
             
             console.log("开始克隆目标仓库...");
             execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
