@@ -24,7 +24,7 @@ jobs:
       - name: Push to Target Repository
         uses: actions/github-script@v6
         env:
-          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/目标用户名/目标仓库名.git"
+          TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git"
         with:
           script: |
             const fs = require('fs').promises;
