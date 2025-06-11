@@ -27,7 +27,7 @@ jobs:
         run: |
           # 创建临时目录并复制资源文件
           mkdir -p target_content
-          cp -R gef-framework/gef-doc/src/main/resources/* target_content/
+          cp -Rgef-doc/src/main/resources/* target_content/
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
