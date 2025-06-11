@@ -19,10 +19,9 @@ jobs:
       - name: Prepare Target Content
         run: |
           echo "当前工作目录: $(pwd)"
-          echo "完整目录结构:"
-          ls -R
+          cd ..
           mkdir -p target_content
-          cp -R gef-doc/src/main/resources/* target_content/
+          cp -R gef-framework/gef-doc/src/main/resources/* target_content/
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
