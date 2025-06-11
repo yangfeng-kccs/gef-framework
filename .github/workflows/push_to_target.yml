@@ -37,7 +37,7 @@ jobs:
             const { execSync } = require('child_process');
             
             // 克隆目标仓库到临时目录
-            execSync('git clone ${{ env.TARGET_REPO }} target_repo', { stdio: 'inherit' });
+            execSync('git clone https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git target_repo', { stdio: 'inherit' });
             
             // 清空目标仓库（保留.git目录）
             await fs.rm('target_repo', { recursive: true, force: true });
