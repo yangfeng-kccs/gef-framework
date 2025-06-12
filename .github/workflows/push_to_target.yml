@@ -30,7 +30,7 @@ jobs:
           TARGET_REPO: "https://${{ secrets.TARGET_PAT }}@github.com/yangfeng-kccs/gef-docs.git"
         with:
           script: |
-            const fs = require('fs').promises;
+            const fs = require('fs');
             const { execSync } = require('child_process');
             
             // 获取环境变量
