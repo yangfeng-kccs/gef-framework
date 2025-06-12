@@ -112,6 +112,7 @@ jobs:
             console.log("提交变更...");
             execSync('git config user.name "GitHub Actions"', { stdio: 'inherit' });
             execSync('git config user.email "actions@github.com"', { stdio: 'inherit' });
+            execSync('git config remote.origin.url  ${targetRepo} ', { stdio: 'inherit' });
             execSync(`git commit -m "Update s from ${process.env.GITHUB_SHA}"`, { stdio: 'inherit' });
             
             console.log("推送变更...");
