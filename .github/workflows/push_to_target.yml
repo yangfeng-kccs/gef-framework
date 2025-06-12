@@ -57,20 +57,20 @@ jobs:
             
             process.chdir('target_repo');
             
-            const files = fs.readdirSync('.');
+            files = fs.readdirSync('.');
             console.log('当前目录文件:', files);
             // mkdir -p target_repo/25.9
           
             console.log("清空目标仓库...");
             execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
             
-            const files = fs.readdirSync('.');
+            files = fs.readdirSync('.');
             console.log('当前目录文件:', files);
             
             console.log("复制新内容...");
             await fs.cp('target_content', 'target_repo', { recursive: true });
             
-            const files = fs.readdirSync('.');
+            files = fs.readdirSync('.');
             console.log('当前目录文件:', files);
             
             console.log("当前目录: " + process.cwd());
