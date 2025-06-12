@@ -49,7 +49,7 @@ jobs:
 
             // 2. 清空目标仓库（保留.git）
             console.log("清空目标仓库...");
-            //execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
+            execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
             
             // 3. 复制内容到目标仓库
             // console.log("复制资源文件...");
