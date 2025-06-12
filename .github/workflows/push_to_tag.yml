@@ -5,7 +5,7 @@ name: Tag Release
 on:
   push:
     tags:
-      - '*'  # 触发条件：推送 v 开头的标签
+      - '*'  # 触发条件：推送标签
 
 jobs:
   push-resources:
@@ -21,8 +21,6 @@ jobs:
         run: |
           mkdir -p target_content
           cp -R gef-doc/src/main/resources/* target_content/
-          echo "准备的内容:"
-          ls -lR target_content
 
       - name: Get Tag Info
         id: set_tag
@@ -41,11 +39,10 @@ jobs:
         with:
           script: |
             console.log(`Tag from context: ${{ steps.set_tag.outputs.tag_name }}`)
-            console.log("${{ env.TAG_NAME }}")
             const fs = require('fs').promises;
             const { execSync } = require('child_process');
             const path = require('path');
-            console.log("${{ env.TARGET_REPO }}")
+
             // 获取环境变量
             const workspace = process.env.GITHUB_WORKSPACE;
             const targetDir = path.join(workspace, 'target_repo');
@@ -85,8 +82,7 @@ jobs:
             // 5. 提交并推送到目标仓库
             console.log("提交变更...");
             git('add -A');
-            
-            
+
             git(`commit -m "Update resources from ${process.env.GITHUB_REPOSITORY}@${process.env.GITHUB_SHA.slice(0,7)}"`);
             
             console.log("推送到目标仓库...");
