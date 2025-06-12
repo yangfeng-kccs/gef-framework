@@ -75,5 +75,5 @@ jobs:
             git(`commit -m "Update resources from ${process.env.GITHUB_REPOSITORY}@${process.env.GITHUB_SHA.slice(0,7)}"`);
             
             console.log("推送到目标仓库...");
-            git('push origin main');
+            git('push  ${{ env.TARGET_REPO }} main');
             console.log("推送完成!");
