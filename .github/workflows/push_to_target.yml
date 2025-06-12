@@ -102,13 +102,7 @@ jobs:
             
             console.log("添加文件...");
             execSync('git add -A', { stdio: 'inherit' });
-            
-            # console.log("检查变更...");
-            # const status = execSync('git status --porcelain').toString();
-            # if (!status) {
-            #   console.log("没有变更需要提交");
-            #   return;
-            # }
+
             
             console.log("提交变更...");
             execSync('git config user.name "GitHub Actions"', { stdio: 'inherit' });
