@@ -47,8 +47,12 @@ jobs:
             console.log("克隆目标仓库...");
             execSync(`git clone ${{ env.TARGET_REPO }} ${targetDir}`, { stdio: 'inherit' });
 
-            mkdir -p target_pushdir
-            nano target_pushdir/newfile.txt
+            try {
+              await fs.writeFile('./target_repo/hello.txt', 'Hello, fs.promises!');
+              console.log('文件创建成功！');
+            } catch (err) {
+              console.error('写入文件失败:', err);
+            }
 
             // 4. 配置目标仓库Git环境
             console.log("配置Git环境...");
