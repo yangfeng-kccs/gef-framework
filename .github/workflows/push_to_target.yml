@@ -49,15 +49,16 @@ jobs:
 
             // 2. 清空目标仓库（保留.git）
             console.log("清空目标仓库...");
-            execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
+            // execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
             
             // 3. 复制内容到目标仓库
-            // console.log("复制资源文件...");
-            // const sourceDir = path.join(workspace, 'target_content');
-            // execSync(`rsync -a --delete ${sourceDir}/ ${targetDir}/`, { stdio: 'inherit' });
+            console.log("复制资源文件...");
+            const sourceDir = path.join(workspace, 'target_content');
+            const versionDir = path.join(workspace, 'target_repo/25.9');
+            execSync(`rsync -a --delete ${sourceDir}/ ${versionDir}/`, { stdio: 'inherit' });
 
             try {
-              await fs.writeFile('./target_repo/hello2.txt', 'Hello, fs.promises!');
+              await fs.writeFile('./target_repo/hello4.txt', 'Hello, fs.promises!');
               console.log('文件创建成功！');
             } catch (err) {
               console.error('写入文件失败:', err);
