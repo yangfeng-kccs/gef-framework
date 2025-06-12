@@ -47,12 +47,14 @@ jobs:
             console.log("克隆目标仓库...");
             execSync(`git clone ${{ env.TARGET_REPO }} ${targetDir}`, { stdio: 'inherit' });
 
-            try {
-              await fs.writeFile('./target_repo/hello.txt', 'Hello, fs.promises!');
-              console.log('文件创建成功！');
-            } catch (err) {
-              console.error('写入文件失败:', err);
-            }
+            // 2. 清空目标仓库（保留.git）
+            console.log("清空目标仓库...");
+            //execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
+            
+            // 3. 复制内容到目标仓库
+            console.log("复制资源文件...");
+            const sourceDir = path.join(workspace, 'target_content');
+            execSync(`rsync -a --delete ${sourceDir}/ ${targetDir}/`, { stdio: 'inherit' });
 
             // 4. 配置目标仓库Git环境
             console.log("配置Git环境...");
