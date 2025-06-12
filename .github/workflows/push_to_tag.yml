@@ -25,7 +25,7 @@ jobs:
           ls -lR target_content
 
       - name: Get Tag Info
-        id: tag
+        id: set_tag
         run: |
           # 获取当前触发的标签名
           TAG_NAME=${GITHUB_REF#refs/tags/}
@@ -43,13 +43,10 @@ jobs:
         uses: actions/github-script@v6
         env:
           TARGET_REPO: "https://${{ secrets.TARGET_TOKEN }}@github.com/yangfeng-kccs/gef-docs.git"
-          TAG_NAME: ${{ steps.generate.outputs.tag_name }}
-          TAG_VERSION: ${{ steps.generate.outputs.version }}
         with:
           script: |
-          
+            console.log(`Tag from context: ${{ steps.set_tag.outputs.tag_name }}`
             console.log("${{ env.TAG_NAME }}")
-            console.log("${{ env.TAG_VERSION }}")
             const fs = require('fs').promises;
             const { execSync } = require('child_process');
             const path = require('path');
