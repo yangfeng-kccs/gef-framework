@@ -5,7 +5,7 @@ name: Tag Release
 on:
   push:
     tags:
-      - 'v*'  # 触发条件：推送 v 开头的标签
+      - '*'  # 触发条件：推送 v 开头的标签
 
 jobs:
   push-resources:
@@ -30,14 +30,9 @@ jobs:
           # 获取当前触发的标签名
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "当前标签: $TAG_NAME"
-          
-          # 提取语义化版本号（示例）
-          VERSION=${TAG_NAME#v}
-          echo "版本号: $VERSION"
-          
+      
           # 设置输出供后续步骤使用
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
@@ -69,15 +64,15 @@ jobs:
             // 3. 复制内容到目标仓库
             console.log("复制资源文件...");
             const sourceDir = path.join(workspace, 'target_content');
-            const versionDir = path.join(workspace, 'target_repo/25.9');
+            const versionDir = path.join(workspace, 'target_repo/${{ steps.set_tag.outputs.tag_name }}');
             execSync(`rsync -a --delete ${sourceDir}/ ${versionDir}/`, { stdio: 'inherit' });
 
-            try {
-              await fs.writeFile('./target_repo/hello4.txt', 'Hello, fs.promises!');
-              console.log('文件创建成功！');
-            } catch (err) {
-              console.error('写入文件失败:', err);
-            }
+            //try {
+            //  await fs.writeFile('./target_repo/hello4.txt', 'Hello, fs.promises!');
+            //  console.log('文件创建成功！');
+            //} catch (err) {
+            //  console.error('写入文件失败:', err);
+            //}
 
             // 4. 配置目标仓库Git环境
             console.log("配置Git环境...");
