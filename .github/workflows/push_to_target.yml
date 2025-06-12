@@ -58,9 +58,9 @@ jobs:
             
             console.log("开始克隆目标仓库...");
             execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
-            
+            console.log("当前目录: " + process.cwd());
             process.chdir('target_repo');
-            
+            console.log("当前目录: " + process.cwd());
 
             try {
               const files = await fs.readdir('.');
@@ -69,11 +69,12 @@ jobs:
               console.error('读取目录失败:', err);
             }
             // mkdir -p target_repo/25.9
-          
+
+            process.chdir('..');
             console.log("清空目标仓库...");
             execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
             
-
+            process.chdir('target_repo');
             try {
               const files = await fs.readdir('.');
               console.log('当前目录内容:', files);
