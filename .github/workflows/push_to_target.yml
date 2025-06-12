@@ -37,8 +37,12 @@ jobs:
             const targetRepo = process.env.TARGET_REPO;
 
             console.log("当前目录: " + process.cwd());
-            process.chdir("..")
-            console.log("当前目录: " + process.cwd());
+            const files = fs.readdirSync('.');
+            console.log('当前目录文件:', files);
+            // process.chdir("..")
+            // console.log("当前目录: " + process.cwd());
+            // const files = fs.readdirSync('.');
+            // console.log('当前目录文件:', files);
             // 确保目录不存在
             try {
               await fs.rm('target_repo', { recursive: true, force: true });
@@ -50,18 +54,27 @@ jobs:
             console.log("开始克隆目标仓库...");
             execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
             
+            process.chdir('target_repo');
             
+            const files = fs.readdirSync('.');
+            console.log('当前目录文件:', files);
             // mkdir -p target_repo/25.9
           
             console.log("清空目标仓库...");
             execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
             
+            const files = fs.readdirSync('.');
+            console.log('当前目录文件:', files);
+            
             console.log("复制新内容...");
             await fs.cp('target_content', 'target_repo', { recursive: true });
             
+            const files = fs.readdirSync('.');
+            console.log('当前目录文件:', files);
+            
             console.log("当前目录: " + process.cwd());
-            console.log("切换到目标仓库目录...");
-            process.chdir('target_repo');
+            // console.log("切换到目标仓库目录...");
+            // process.chdir('target_repo');
             
             console.log("当前目录: " + process.cwd());
             execSync('ls -la', { stdio: 'inherit' });
