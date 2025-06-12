@@ -1,0 +1,102 @@
+
+
+name: Tag Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 触发条件：推送 v 开头的标签
+
+jobs:
+  push-resources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with Submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Prepare Target Content
+        run: |
+          mkdir -p target_content
+          cp -R gef-doc/src/main/resources/* target_content/
+          echo "准备的内容:"
+          ls -lR target_content
+
+      - name: Get Tag Info
+        id: tag
+        run: |
+          # 获取当前触发的标签名
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "当前标签: $TAG_NAME"
+          
+          # 提取语义化版本号（示例）
+          VERSION=${TAG_NAME#v}
+          echo "版本号: $VERSION"
+          
+          # 设置输出供后续步骤使用
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Push to Target Repository
+        uses: actions/github-script@v6
+        env:
+          TARGET_REPO: "https://${{ secrets.TARGET_TOKEN }}@github.com/yangfeng-kccs/gef-docs.git"env:
+          TAG_NAME: ${{ steps.generate.outputs.tag_name }}
+          TAG_VERSION: ${{ steps.generate.outputs.version }}
+        with:
+          script: |
+          
+            console.log("${{ env.TAG_NAME }}")
+            console.log("${{ env.TAG_VERSION }}")
+            const fs = require('fs').promises;
+            const { execSync } = require('child_process');
+            const path = require('path');
+            console.log("${{ env.TARGET_REPO }}")
+            // 获取环境变量
+            const workspace = process.env.GITHUB_WORKSPACE;
+            const targetDir = path.join(workspace, 'target_repo');
+            
+            // 1. 清理并克隆目标仓库
+            console.log("清理旧目录...");
+            await fs.rm(targetDir, { recursive: true, force: true }).catch(() => {});
+            
+            console.log("克隆目标仓库...");
+            execSync(`git clone ${{ env.TARGET_REPO }} ${targetDir}`, { stdio: 'inherit' });
+
+            // 2. 清空目标仓库（保留.git）
+            console.log("清空目标仓库...");
+            // execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
+            
+            // 3. 复制内容到目标仓库
+            console.log("复制资源文件...");
+            const sourceDir = path.join(workspace, 'target_content');
+            const versionDir = path.join(workspace, 'target_repo/25.9');
+            execSync(`rsync -a --delete ${sourceDir}/ ${versionDir}/`, { stdio: 'inherit' });
+
+            try {
+              await fs.writeFile('./target_repo/hello4.txt', 'Hello, fs.promises!');
+              console.log('文件创建成功！');
+            } catch (err) {
+              console.error('写入文件失败:', err);
+            }
+
+            // 4. 配置目标仓库Git环境
+            console.log("配置Git环境...");
+            const git = (cmd) => execSync(`git ${cmd}`, { cwd: targetDir, stdio: 'inherit' });
+            
+            git('config user.name "GitHub Actions"');
+            git('config user.email "actions@github.com"');
+            git('remote set-url origin ${{ env.TARGET_REPO }}');
+            
+            // 5. 提交并推送到目标仓库
+            console.log("提交变更...");
+            git('add -A');
+            
+            
+            git(`commit -m "Update resources from ${process.env.GITHUB_REPOSITORY}@${process.env.GITHUB_SHA.slice(0,7)}"`);
+            
+            console.log("推送到目标仓库...");
+            git('push  ${{ env.TARGET_REPO }} main');
+            console.log("推送完成!");
