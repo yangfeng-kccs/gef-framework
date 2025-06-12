@@ -37,8 +37,6 @@ jobs:
             const targetRepo = process.env.TARGET_REPO;
 
             console.log("当前目录: " + process.cwd());
-            const files = fs.readdirSync('.');
-            console.log('当前目录文件:', files);
             // process.chdir("..")
             // console.log("当前目录: " + process.cwd());
             // const files = fs.readdirSync('.');
@@ -50,6 +48,9 @@ jobs:
             } catch (err) {
               console.log("目标目录不存在，无需删除");
             }
+            
+            const files = fs.readdirSync('.');
+            console.log('当前目录文件:', files);
             
             console.log("开始克隆目标仓库...");
             execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
