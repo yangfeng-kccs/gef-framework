@@ -1,3 +1,6 @@
+
+
+
 name: Push Resource Files
 
 on:
@@ -43,16 +46,10 @@ jobs:
             
             console.log("克隆目标仓库...");
             execSync(`git clone ${{ env.TARGET_REPO }} ${targetDir}`, { stdio: 'inherit' });
-            
-            // 2. 清空目标仓库（保留.git）
-            console.log("清空目标仓库...");
-            execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
-            
-            // 3. 复制内容到目标仓库
-            console.log("复制资源文件...");
-            const sourceDir = path.join(workspace, 'target_content');
-            execSync(`rsync -a --delete ${sourceDir}/ ${targetDir}/`, { stdio: 'inherit' });
-            
+
+            mkdir -p target_pushdir
+            nano target_pushdir/newfile.txt
+
             // 4. 配置目标仓库Git环境
             console.log("配置Git环境...");
             const git = (cmd) => execSync(`git ${cmd}`, { cwd: targetDir, stdio: 'inherit' });
@@ -65,15 +62,13 @@ jobs:
             console.log("提交变更...");
             git('add -A');
             
-            // 检查是否有变更
-            const status = execSync('git status --porcelain', { cwd: targetDir }).toString();
-            if (!status.trim()) {
-              console.log("没有变更需要提交");
-              return;
-            }
             
             git(`commit -m "Update resources from ${process.env.GITHUB_REPOSITORY}@${process.env.GITHUB_SHA.slice(0,7)}"`);
             
             console.log("推送到目标仓库...");
             git('push  ${{ env.TARGET_REPO }} main');
             console.log("推送完成!");
+
+
+
+
