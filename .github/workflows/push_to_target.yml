@@ -1,4 +1,4 @@
-name: Push  Files
+name: Push Resource Files
 
 on:
   push:
@@ -18,11 +18,10 @@ jobs:
 
       - name: Prepare Target Content
         run: |
-          echo "当前工作目录: $(pwd)"
-          cd ../
-          echo "当前工作目录: $(pwd)"
           mkdir -p target_content
-          cp -R gef-framework/gef-doc/src/main/resources/* target_content/
+          cp -R gef-doc/src/main/resources/* target_content/
+          echo "准备的内容:"
+          ls -lR target_content
 
       - name: Push to Target Repository
         uses: actions/github-script@v6
@@ -32,84 +31,49 @@ jobs:
           script: |
             const fs = require('fs').promises;
             const { execSync } = require('child_process');
+            const path = require('path');
             
             // 获取环境变量
-            const targetRepo = process.env.TARGET_REPO;
-
-            console.log("当前目录: " + process.cwd());
-            // process.chdir("..")
-            // console.log("当前目录: " + process.cwd());
-            // const files = fs.readdirSync('.');
-            // console.log('当前目录文件:', files);
-            // 确保目录不存在
-            try {
-              await fs.rm('target_repo', { recursive: true, force: true });
-              console.log("已删除旧的目标目录");
-            } catch (err) {
-              console.log("目标目录不存在，无需删除");
-            }
+            const workspace = process.env.GITHUB_WORKSPACE;
+            const targetDir = path.join(workspace, 'target_repo');
             
-            try {
-              const files = await fs.readdir('.');
-              console.log('当前目录内容:', files);
-            } catch (err) {
-              console.error('读取目录失败:', err);
-            }
+            // 1. 清理并克隆目标仓库
+            console.log("清理旧目录...");
+            await fs.rm(targetDir, { recursive: true, force: true }).catch(() => {});
             
-            console.log("开始克隆目标仓库...");
-            execSync(`git clone ${targetRepo} target_repo`, { stdio: 'inherit' });
-            console.log("当前目录: " + process.cwd());
-            process.chdir('target_repo');
-            console.log("当前目录: " + process.cwd());
-
-            try {
-              const files = await fs.readdir('.');
-              console.log('当前目录内容:', files);
-            } catch (err) {
-              console.error('读取目录失败:', err);
-            }
-            // mkdir -p target_repo/25.9
-
-            process.chdir('..');
+            console.log("克隆目标仓库...");
+            execSync(`git clone ${{ env.TARGET_REPO }} ${targetDir}`, { stdio: 'inherit' });
+            
+            // 2. 清空目标仓库（保留.git）
             console.log("清空目标仓库...");
-            execSync('find target_repo -mindepth 1 ! -name ".git" -exec rm -rf {} +', { stdio: 'inherit' });
+            execSync(`find ${targetDir} -mindepth 1 ! -name ".git" -exec rm -rf {} +`, { stdio: 'inherit' });
             
-            process.chdir('target_repo');
-            try {
-              const files = await fs.readdir('.');
-              console.log('当前目录内容:', files);
-            } catch (err) {
-              console.error('读取目录失败:', err);
-            }
-            process.chdir('..');
-            console.log("复制新内容...");
-            await fs.cp('target_content', 'target_repo', { recursive: true });
+            // 3. 复制内容到目标仓库
+            console.log("复制资源文件...");
+            const sourceDir = path.join(workspace, 'target_content');
+            execSync(`rsync -a --delete ${sourceDir}/ ${targetDir}/`, { stdio: 'inherit' });
             
-
-            try {
-              const files = await fs.readdir('.');
-              console.log('当前目录内容:', files);
-            } catch (err) {
-              console.error('读取目录失败:', err);
-            }
+            // 4. 配置目标仓库Git环境
+            console.log("配置Git环境...");
+            const git = (cmd) => execSync(`git ${cmd}`, { cwd: targetDir, stdio: 'inherit' });
             
-            console.log("当前目录: " + process.cwd());
-            console.log("切换到目标仓库目录...");
-            process.chdir('target_repo');
+            git('config user.name "GitHub Actions"');
+            git('config user.email "actions@github.com"');
+            git('remote set-url origin ${{ env.TARGET_REPO }}');
             
-            console.log("当前目录: " + process.cwd());
-            execSync('ls -la', { stdio: 'inherit' });
-            
-            console.log("添加文件...");
-            execSync('git add -A', { stdio: 'inherit' });
-
-            
+            // 5. 提交并推送到目标仓库
             console.log("提交变更...");
-            execSync('git config user.name "GitHub Actions"', { stdio: 'inherit' });
-            execSync('git config user.email "actions@github.com"', { stdio: 'inherit' });
-            execSync('git config remote.origin.url  ${targetRepo} ', { stdio: 'inherit' });
-            execSync(`git commit -m "Update s from ${process.env.GITHUB_SHA}"`, { stdio: 'inherit' });
+            git('add -A');
             
-            console.log("推送变更...");
-            execSync('git push origin main', { stdio: 'inherit' });
+            // 检查是否有变更
+            const status = execSync('git status --porcelain', { cwd: targetDir }).toString();
+            if (!status.trim()) {
+              console.log("没有变更需要提交");
+              return;
+            }
+            
+            git(`commit -m "Update resources from ${process.env.GITHUB_REPOSITORY}@${process.env.GITHUB_SHA.slice(0,7)}"`);
+            
+            console.log("推送到目标仓库...");
+            git('push origin main');
             console.log("推送完成!");
