@@ -45,7 +45,7 @@ jobs:
           TARGET_REPO: "https://${{ secrets.TARGET_TOKEN }}@github.com/yangfeng-kccs/gef-docs.git"
         with:
           script: |
-            console.log(`Tag from context: ${{ steps.set_tag.outputs.tag_name }}`
+            console.log(`Tag from context: ${{ steps.set_tag.outputs.tag_name }}`)
             console.log("${{ env.TAG_NAME }}")
             const fs = require('fs').promises;
             const { execSync } = require('child_process');
